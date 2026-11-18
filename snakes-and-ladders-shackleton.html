@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snakes &amp; Ladders: Mission Shackleton</title>
+<style>
+:root{--cyan:#35e0ff;--amber:#ffb347;--pink:#ff4fa3;--lime:#8dff6a;--void:#070b1a}
+*{box-sizing:border-box}
+html,body{margin:0;background:#12162b}
+body{font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;padding:16px}
+.sheet{
+  width:194mm;margin:0 auto;position:relative;overflow:hidden;color:#fff;
+  padding:7mm 7mm 6mm;border-radius:5mm;
+  background:
+    radial-gradient(60mm 45mm at 92% 4%,rgba(255,79,163,.28),transparent 70%),
+    radial-gradient(70mm 55mm at 4% 100%,rgba(53,224,255,.22),transparent 70%),
+    linear-gradient(170deg,#0b1030 0%,#070b1a 55%,#0d0a24 100%);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+.stars{position:absolute;inset:0;pointer-events:none}
+header{position:relative;display:flex;align-items:center;justify-content:space-between;gap:6mm;margin-bottom:4.5mm}
+h1{margin:0;font-size:10.5mm;line-height:.95;font-weight:900;letter-spacing:-.2mm;
+  background:linear-gradient(90deg,#fff 10%,var(--cyan) 60%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:2mm 0 0;font-size:3.6mm;color:#b9c4ee;max-width:128mm;line-height:1.35}
+.moon{width:22mm;height:22mm;flex:none;filter:drop-shadow(0 0 3mm rgba(53,224,255,.45))}
+.frame{position:relative;padding:1.6mm;border-radius:3.2mm;background:linear-gradient(135deg,var(--cyan),var(--pink) 60%,var(--amber))}
+.board{position:relative;width:100%;aspect-ratio:1/1;background:#050817;border-radius:2mm;overflow:hidden}
+.grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr);gap:.5mm;padding:.5mm}
+.cell{position:relative;border-radius:1.2mm;overflow:hidden;
+  background:linear-gradient(160deg,hsl(var(--h) 55% 22%),hsl(var(--h) 55% 13%));
+  border:.25mm solid hsl(var(--h) 80% 55% / .35)}
+.cell span{position:absolute;top:.9mm;left:1.4mm;font-size:3.3mm;font-weight:800;color:hsl(var(--h) 90% 82%)}
+.cell em{position:absolute;right:1.2mm;bottom:.6mm;font-style:normal;font-size:4.4mm;opacity:.9}
+.cell.start{background:linear-gradient(160deg,#ffd27a,#ff8a3d);border-color:#fff}
+.cell.start span{color:#3a1a00}
+.cell.end{background:radial-gradient(circle at 50% 56%,#000 0 34%,#06162c 46%,#d8f6ff 52%,#4fa8d8 56%,#0a1a38 66%);border-color:#d8f6ff}
+.cell.end span{color:#fff}
+.tag{position:absolute;left:0;right:0;bottom:.8mm;text-align:center;font-size:2.4mm;font-weight:900;letter-spacing:.2mm}
+.start .tag{color:#3a1a00}.end .tag{color:var(--cyan)}
+.big{position:absolute;inset:3mm 0 0;display:flex;align-items:center;justify-content:center;font-size:7.5mm}
+svg.over{position:absolute;inset:0;width:100%;height:100%}
+.legend{position:relative;display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:3mm;margin-top:4.5mm}
+.card{padding:3mm 3.4mm;border-radius:2.6mm;background:rgba(255,255,255,.07);border:.25mm solid rgba(255,255,255,.18);font-size:3.1mm;line-height:1.38;color:#dfe5ff}
+.card h2{margin:0 0 1.5mm;font-size:3.7mm;color:var(--amber)}
+.card ol{margin:0;padding-left:4.4mm}.card li{margin-bottom:.8mm}
+.card p{margin:0}
+.row{display:flex;align-items:center;gap:2mm;margin-bottom:1.4mm}
+.row svg{width:15mm;height:7mm;flex:none}
+.fine{position:relative;margin-top:3mm;text-align:center;font-size:2.7mm;color:#8f9bc8}
+
+/* ink saver */
+.sheet.light{background:#fbfaf7;color:#14183a}
+.light h1{background:linear-gradient(90deg,#14183a 10%,#0a7f95 60%,#c0287a);-webkit-background-clip:text;background-clip:text}
+.light .sub,.light .fine{color:#4a5072}
+.light .stars,.light .moon{display:none}
+.light .board{background:#fff}
+.light .cell{background:hsl(var(--h) 60% 94%);border-color:hsl(var(--h) 50% 70%)}
+.light .cell span{color:hsl(var(--h) 60% 28%)}
+.light .cell.start{background:linear-gradient(160deg,#ffe3a8,#ffb06a)}
+.light .card{background:#f0eefa;border-color:#cfcbe6;color:#2a2f55}
+.light .card h2{color:#b8590f}
+.toggle{position:fixed;top:12px;right:12px;z-index:5;border:0;border-radius:99px;padding:9px 16px;font:700 14px "Segoe UI",system-ui,sans-serif;
+  background:var(--cyan);color:#06122a;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.toggle:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+@page{size:A4 portrait;margin:6mm}
+@media print{
+  html,body{background:none;padding:0}
+  .toggle{display:none}
+  .sheet{margin:0;width:198mm;border-radius:0}
+}
+@media (max-width:760px){
+  .sheet{width:100%;padding:12px}.legend{grid-template-columns:1fr}
+  .cell span{font-size:9px}.tag{font-size:6px}.cell em{font-size:12px}.big{font-size:20px}
+  h1{font-size:30px}.sub{font-size:13px}.card{font-size:13px}.moon{width:56px;height:56px}
+}
+</style>
+</head>
+<body>
+<button class="toggle" id="ink" type="button">Ink saver: off</button>
+<div class="sheet" id="sheet">
+  <svg class="stars" id="stars" width="100%" height="100%" aria-hidden="true"></svg>
+  <header>
+    <div>
+      <h1>Snakes &amp; Ladders<br>Mission Shackleton</h1>
+      <p class="sub">Race from Earth orbit to the permanently shadowed crater at the Moon’s south pole. Climb the rocket ladders, dodge the cosmic snakes.</p>
+    </div>
+    <svg class="moon" viewBox="0 0 100 100" aria-hidden="true">
+      <defs><radialGradient id="mg" cx="35%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#9aa6c8"/></radialGradient></defs>
+      <circle cx="50" cy="50" r="46" fill="url(#mg)"/>
+      <circle cx="34" cy="34" r="8" fill="#8793b8"/><circle cx="66" cy="42" r="5" fill="#8793b8"/>
+      <circle cx="72" cy="68" r="4" fill="#8793b8"/>
+      <circle cx="46" cy="74" r="12" fill="#6f7ca5"/><circle cx="46" cy="74" r="8" fill="#0a0f26"/>
+    </svg>
+  </header>
+
+  <div class="frame"><div class="board">
+    <div class="grid" id="grid"></div>
+    <svg class="over" id="over" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+  </div></div>
+
+  <div class="legend">
+    <div class="card">
+      <h2>How to play</h2>
+      <ol>
+        <li>Place your tokens on square 1 and roll the die in turn.</li>
+        <li>Move forward by the number rolled.</li>
+        <li>Land at the bottom of a ladder: climb to the top.</li>
+        <li>Land on a snake’s head: slide down to its tail.</li>
+        <li>First to reach Shackleton on square 100 wins.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>Key</h2>
+      <div class="row"><svg viewBox="0 0 60 26"><g stroke="#35e0ff" stroke-width="3.5" stroke-linecap="round"><line x1="4" y1="6" x2="56" y2="6"/><line x1="4" y1="20" x2="56" y2="20"/></g><g stroke="#ffd27a" stroke-width="2.6"><line x1="14" y1="6" x2="14" y2="20"/><line x1="26" y1="6" x2="26" y2="20"/><line x1="38" y1="6" x2="38" y2="20"/><line x1="50" y1="6" x2="50" y2="20"/></g></svg>Rocket ladder: go up</div>
+      <div class="row"><svg viewBox="0 0 60 26"><path d="M4 20 Q16 2 28 13 T54 8" fill="none" stroke="#ff4fa3" stroke-width="7" stroke-linecap="round"/><circle cx="54" cy="8" r="5" fill="#ff4fa3"/></svg>Cosmic snake: go down</div>
+      <div class="row"><span style="font-size:5mm;width:15mm;text-align:center">🚀</span>Start: square 1</div>
+      <div class="row"><span style="font-size:5mm;width:15mm;text-align:center">🌑</span>Finish: square 100</div>
+    </div>
+    <div class="card">
+      <h2>About Shackleton crater</h2>
+      <p>A crater near the Moon’s south pole, about 21 km wide. Its floor never sees sunlight, and orbiters have found hints of water ice there. That makes it a prime target for future lunar missions.</p>
+    </div>
+  </div>
+  <div class="fine">Print on A4 portrait at 100% scale with “Background graphics” turned on. You need one die and a token per player.</div>
+</div>
+
+<script>
+(function(){
+  var ladders=[[4,25],[13,46],[27,53],[50,69],[62,81],[74,92]];
+  var snakes=[[96,58],[88,67],[83,45],[71,32],[55,36],[47,19],[30,10]];
+  var cols=["#ff4fa3","#8dff6a","#ffb347","#b388ff"];
+  var icons={6:"🛰️",16:"⭐",23:"☄️",39:"🛸",57:"👨‍🚀",64:"⭐",77:"🛰️",85:"☄️",94:"⭐",99:"✨"};
+
+  function pos(n){var r=Math.floor((n-1)/10),c=(n-1)%10;if(r%2)c=9-c;return{x:c*100+50,y:(9-r)*100+50}}
+
+  var h="";
+  for(var row=9;row>=0;row--){
+    for(var col=0;col<10;col++){
+      var n=row*10+(row%2?9-col:col)+1, cls="cell", ex="";
+      if(n===1){cls+=" start";ex='<div class="big">🚀</div><div class="tag">LAUNCH</div>'}
+      else if(n===100){cls+=" end";ex='<div class="tag">SHACKLETON</div>'}
+      else if(icons[n]){ex='<em>'+icons[n]+'</em>'}
+      h+='<div class="'+cls+'" style="--h:'+(205+row*8)+'"><span>'+n+'</span>'+ex+'</div>';
+    }
+  }
+  document.getElementById("grid").innerHTML=h;
+
+  function ladder(a,b){
+    var p=pos(a),q=pos(b),dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,nx=-uy*15,ny=ux*15;
+    var A=[p.x+nx,p.y+ny,q.x+nx,q.y+ny],B=[p.x-nx,p.y-ny,q.x-nx,q.y-ny];
+    function ln(c,w,col,o){return '<line x1="'+c[0]+'" y1="'+c[1]+'" x2="'+c[2]+'" y2="'+c[3]+'" stroke="'+col+'" stroke-width="'+w+'"'+(o?' opacity="'+o+'"':'')+'/>'}
+    var s='<g stroke-linecap="round">'+ln(A,26,"#35e0ff",.22)+ln(B,26,"#35e0ff",.22)+ln(A,14,"#04060f")+ln(B,14,"#04060f")+ln(A,7,"#35e0ff")+ln(B,7,"#35e0ff");
+    var cnt=Math.floor(L/34);
+    for(var i=1;i<=cnt;i++){
+      var t=i/(cnt+1),cx=p.x+dx*t,cy=p.y+dy*t,r=[cx+nx,cy+ny,cx-nx,cy-ny];
+      s+=ln(r,10,"#04060f")+ln(r,5.5,"#ffd27a");
+    }
+    s+='<circle cx="'+q.x+'" cy="'+q.y+'" r="9" fill="#ffd27a" stroke="#04060f" stroke-width="3"/>';
+    return s+'</g>';
+  }
+  function snake(a,b,col){
+    var p=pos(a),q=pos(b),dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L,w=Math.max(2,Math.round(L/120)),pts=[];
+    for(var i=0;i<=40;i++){
+      var t=i/40,amp=26*Math.sin(t*Math.PI*w)*(0.35+0.65*Math.sin(Math.PI*Math.min(1,t*1.1+.05)));
+      pts.push((p.x+dx*t+nx*amp).toFixed(1)+","+(p.y+dy*t+ny*amp).toFixed(1));
+    }
+    var d="M"+pts.join(" L"),h0=pts[0].split(","),h1=pts[2].split(","),ang=Math.atan2(h0[1]-h1[1],h0[0]-h1[0]);
+    var hx=+h0[0],hy=+h0[1],ex=Math.cos(ang+1.5708)*7,ey=Math.sin(ang+1.5708)*7,fx=Math.cos(ang)*5,fy=Math.sin(ang)*5;
+    var s='<g stroke-linecap="round" stroke-linejoin="round" fill="none">';
+    s+='<path d="'+d+'" stroke="'+col+'" stroke-width="34" opacity=".22"/>';
+    s+='<path d="'+d+'" stroke="#04060f" stroke-width="24"/>';
+    s+='<path d="'+d+'" stroke="'+col+'" stroke-width="17"/>';
+    s+='<path d="'+d+'" stroke="#fff" stroke-width="4" stroke-dasharray="2 14" opacity=".85"/>';
+    s+='<ellipse cx="'+hx+'" cy="'+hy+'" rx="19" ry="16" transform="rotate('+(ang*57.3)+' '+hx+' '+hy+')" fill="'+col+'" stroke="#04060f" stroke-width="4"/>';
+    s+='<circle cx="'+(hx+fx+ex)+'" cy="'+(hy+fy+ey)+'" r="5.5" fill="#fff" stroke="#04060f" stroke-width="1.5"/>';
+    s+='<circle cx="'+(hx+fx-ex)+'" cy="'+(hy+fy-ey)+'" r="5.5" fill="#fff" stroke="#04060f" stroke-width="1.5"/>';
+    s+='<circle cx="'+(hx+fx*1.6+ex)+'" cy="'+(hy+fy*1.6+ey)+'" r="2.4" fill="#04060f" stroke="none"/>';
+    s+='<circle cx="'+(hx+fx*1.6-ex)+'" cy="'+(hy+fy*1.6-ey)+'" r="2.4" fill="#04060f" stroke="none"/>';
+    return s+'</g>';
+  }
+  var o="";
+  ladders.forEach(function(l){o+=ladder(l[0],l[1])});
+  snakes.forEach(function(s,i){o+=snake(s[0],s[1],cols[i%cols.length])});
+  document.getElementById("over").innerHTML=o;
+
+  var st="",sd=3;function r2(){sd=(sd*16807)%2147483647;return sd/2147483647}
+  for(var i=0;i<120;i++)st+='<circle cx="'+(r2()*100)+'%" cy="'+(r2()*100)+'%" r="'+(.3+r2()*.9)+'" fill="#fff" opacity="'+(.25+r2()*.6)+'"/>';
+  document.getElementById("stars").innerHTML=st;
+
+  var btn=document.getElementById("ink"),sheet=document.getElementById("sheet");
+  btn.addEventListener("click",function(){
+    var on=sheet.classList.toggle("light");
+    btn.textContent="Ink saver: "+(on?"on":"off");
+  });
+})();
+</script>
+</body>
+</html>
